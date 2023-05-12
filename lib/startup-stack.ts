@@ -44,7 +44,7 @@ export class StartupStack extends cdk.Stack {
     //   }
     // });
 
-    // table.grantReadData(quoteLambda);
+    table.grantReadData(getLambda);
 
     // const putLambda = new nodejslambda.NodejsFunction(this, "PutLambda", {
     //   runtime: lambda.Runtime.NODEJS_16_X,
