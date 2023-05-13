@@ -30,41 +30,28 @@ export class StartupStack extends cdk.Stack {
       }
     });
 
-    // const quoteLambda = new nodejslambda.NodejsFunction(this, "QuoteLambda", {
-    //   runtime: lambda.Runtime.NODEJS_16_X,
-    //   environment:  {
-    //     'TABLE_NAME': table.tableName
-    //     },
-    //   handler: "index.handler",
-    //   entry: "from_lambda/index.js",
-    //   bundling: {
-    //     externalModules: [
-    //       'aws-sdk'
-    //     ]
-    //   }
-    // });
+    const putLambda = new nodejslambda.NodejsFunction(this, "PutLambda", {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      environment: {
+        'TABLE_NAME': table.tableName
+      },
+      handler: "index.handler",
+      entry: "to_lambda/index.js",
+      bundling: {
+        externalModules: [
+          'aws-sdk'
+        ]
+      }
+    });
 
     table.grantReadData(getLambda);
-
-    // const putLambda = new nodejslambda.NodejsFunction(this, "PutLambda", {
-    //   runtime: lambda.Runtime.NODEJS_16_X,
-    //   environment:  {
-    //     'TABLE_NAME': table.tableName
-    //     },
-    //     handler: "index.handler",
-    //     entry: "from_lambda/index.js",
-    //     bundling: {
-    //       externalModules: [
-    //         'aws-sdk'
-    //       ]
-    //     }
-    // });
+    table.grantWriteData(putLambda);
 
     // API Gateway
     const api = new apigateway.RestApi(this, "Api");
 
     api.root.addMethod("GET", new apigateway.LambdaIntegration(getLambda));
-    // api.root.addMethod("POST", new apigateway.LambdaIntegration(putLambda));
+    api.root.addMethod("POST", new apigateway.LambdaIntegration(putLambda));
     
     new cdk.CfnOutput(this, "Endpoint", {
       value: api.url!,
