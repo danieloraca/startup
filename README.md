@@ -22,3 +22,6 @@ The `cdk.json` file tells the CDK Toolkit how to execute your app.
 * `npm run build`
 * `npm install aws-cdk-lib`
 
+## CLI testing
+* add item to DynamoDB using https://httpie.io/docs/cli:
+    `http POST https://xxx.lambda-url.region.on.aws < files/data.json`

@@ -50,8 +50,29 @@ export class StartupStack extends cdk.Stack {
     // API Gateway
     const api = new apigateway.RestApi(this, "Api");
 
+    // Define a new API Gateway resource for the "/item" endpoint
+    const item = api.root.addResource("item");
+
+    // Define a request mapping template for the POST method
+    const requestTemplate = {
+      "application/json": {
+        "name": "$input.json('$.name')"
+      }
+    };
+
+    // Add the POST method to the "/item" resource and use the request mapping template
+    item.addMethod(
+      "POST",
+      new apigateway.LambdaIntegration(putLambda),
+      {
+        requestTemplates: requestTemplate,
+        methodResponses: [{
+          statusCode: "200"
+        }],
+      }  as apigateway.MethodOptions
+    );
+
     api.root.addMethod("GET", new apigateway.LambdaIntegration(getLambda));
-    api.root.addMethod("POST", new apigateway.LambdaIntegration(putLambda));
     
     new cdk.CfnOutput(this, "Endpoint", {
       value: api.url!,
