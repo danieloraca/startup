@@ -3,22 +3,25 @@ const dynamodb = new AWS.DynamoDB.DocumentClient();
 
 exports.handler = async (event) => {
   const body = JSON.parse(event.body);
-  
+
   try {
     // Retrieve the record ID from the request
     const recordId = body.id;
     console.log('recordId: ', recordId);
 
     // Delete the record from DynamoDB
-    await dynamodb
-      .delete({
-        TableName: process.env.TABLE_NAME,
-        Key: {
-          id: recordId,
-        },
-      })
-      .promise();
-      console.log('record ' + recordId + ' deleted');
+    const params = {
+      TableName: process.env.TABLE_NAME,
+      Key: {
+        id: recordId,
+      },
+    };
+    const result = await dynamodb
+      .delete(params)
+      .promise()
+      .then(console.log("Done deleting"));
+
+    console.log('result: ', result);
     return {
       statusCode: 200,
       body: JSON.stringify({ message: 'Record deleted successfully' }),

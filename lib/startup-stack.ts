@@ -57,6 +57,10 @@ export class StartupStack extends cdk.Stack {
     table.grantReadData(getLambda);
     table.grantWriteData(putLambda);
     table.grantWriteData(deleteLambda);
+    table.grantFullAccess(deleteLambda);
+    // table.grant(deleteLambda, 'dynamodb:PutItem');
+    // table.grant(deleteLambda, 'dynamodb:DeleteItem');
+
 
     // API Gateway
     const api = new apigateway.RestApi(this, "ApiDan");
