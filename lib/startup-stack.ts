@@ -13,10 +13,10 @@ export class StartupStack extends cdk.Stack {
     //dynamo table
     const table = new dynamodb.Table(this, 'DynamoDan', {
       partitionKey: { name: 'id', type: dynamodb.AttributeType.STRING },
-      tableName: 'DynamoDanTable'
+      tableName: 'DynamoDan'
     });
 
-    const getLambda = new nodejslambda.NodejsFunction(this, "GetLambda", {
+    const getLambda = new nodejslambda.NodejsFunction(this, "GetLambdaDan", {
       runtime: lambda.Runtime.NODEJS_16_X,
       environment: {
         'TABLE_NAME': table.tableName
@@ -30,7 +30,7 @@ export class StartupStack extends cdk.Stack {
       }
     });
 
-    const putLambda = new nodejslambda.NodejsFunction(this, "PutLambda", {
+    const putLambda = new nodejslambda.NodejsFunction(this, "PutLambdaDan", {
       runtime: lambda.Runtime.NODEJS_16_X,
       environment: {
         'TABLE_NAME': table.tableName
@@ -44,14 +44,26 @@ export class StartupStack extends cdk.Stack {
       }
     });
 
+    const deleteLambda = new lambda.Function(this, 'DeleteLambdaDan', {
+      runtime: lambda.Runtime.NODEJS_16_X,
+      environment: {
+        'TABLE_NAME': table.tableName,
+      },
+      handler: 'index.handler',
+      code: lambda.Code.fromAsset('delete_lambda'),
+      memorySize: 256,
+    });
+  
     table.grantReadData(getLambda);
     table.grantWriteData(putLambda);
+    table.grantWriteData(deleteLambda);
 
     // API Gateway
-    const api = new apigateway.RestApi(this, "Api");
+    const api = new apigateway.RestApi(this, "ApiDan");
 
     // Define a new API Gateway resource for the "/item" endpoint
     const item = api.root.addResource("item");
+    const itemById = item.addResource('{id}');
 
     // Define a request mapping template for the POST method
     const requestTemplate = {
@@ -69,9 +81,20 @@ export class StartupStack extends cdk.Stack {
         methodResponses: [{
           statusCode: "200"
         }],
+        proxy: true,
       }  as apigateway.MethodOptions
     );
 
+    itemById.addMethod(
+      'DELETE',
+      new apigateway.LambdaIntegration(deleteLambda, {
+        proxy: true,
+      }),
+      {
+        methodResponses: [{ statusCode: '204' }],
+      } as apigateway.MethodOptions,
+    );
+    
     api.root.addMethod("GET", new apigateway.LambdaIntegration(getLambda));
     
     new cdk.CfnOutput(this, "Endpoint", {
